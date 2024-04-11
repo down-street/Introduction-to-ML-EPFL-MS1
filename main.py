@@ -60,10 +60,12 @@ def main(args):
     # Follow the "DummyClassifier" example for your methods
     if args.method == "dummy_classifier":
         method_obj = DummyClassifier(arg1=1, arg2=2)
+    
+    elif args.method == "knn":
+        method_obj = KNN(k=args.K,task_kind=args.task)
 
     elif ...:  ### WRITE YOUR CODE HERE
         pass
-
 
     ## 4. Train and evaluate the method
 
@@ -74,7 +76,6 @@ def main(args):
         # Perform inference for training and test data
         train_pred = method_obj.predict(xtrain)
         preds = method_obj.predict(xtest)
-
         ## Report results: performance on train and valid/test sets
         train_loss = mse_fn(train_pred, ctrain)
         loss = mse_fn(preds, ctest)
