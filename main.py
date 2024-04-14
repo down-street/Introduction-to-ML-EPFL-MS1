@@ -4,7 +4,7 @@ import numpy as np
 
 from src.data import load_data
 from src.methods.dummy_methods import DummyClassifier
-from src.methods.logistic_regression import LogisticRegression
+from src.methods.logistic_regression import LogisticRegression, run_search_for_hyperparam_logistic
 from src.methods.linear_regression import LinearRegression 
 from src.methods.knn import KNN
 from src.utils import normalize_fn, append_bias_term, accuracy_fn, macrof1_fn, mse_fn
@@ -44,8 +44,9 @@ def main(args):
 
     # Make a validation set (it can overwrite xtest, ytest)
     if not args.test:
-        ### WRITE YOUR CODE HERE
-        pass
+        if args.method == "logistic_regression":
+            run_search_for_hyperparam_logistic(xtrain, ytrain)
+        
     
     ### WRITE YOUR CODE HERE to do any other data processing
 
@@ -64,8 +65,8 @@ def main(args):
     elif args.method == "knn":
         method_obj = KNN(k=args.K,task_kind=args.task)
 
-    elif ...:  ### WRITE YOUR CODE HERE
-        pass
+    elif args.method == "logistic_regression":  ### WRITE YOUR CODE HERE
+        method_obj = LogisticRegression(lr=args.lr_logistic, max_iters=args.max_iters_logistic)
 
     ## 4. Train and evaluate the method
 
@@ -116,6 +117,8 @@ if __name__ == '__main__':
     parser.add_argument('--K', type=int, default=1, help="number of neighboring datapoints used for knn")
     parser.add_argument('--lr', type=float, default=1e-5, help="learning rate for methods with learning rate")
     parser.add_argument('--max_iters', type=int, default=100, help="max iters for methods which are iterative")
+    parser.add_argument('--lr_logistic', type=float, default=5e-2, help="learning rate for methods with learning rate")
+    parser.add_argument('--max_iters_logistic', type=int, default=10000, help="max iters for logistic regression")
     parser.add_argument('--test', action="store_true", help="train on whole training data and evaluate on the test data, otherwise use a validation set")
 
 

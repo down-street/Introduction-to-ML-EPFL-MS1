@@ -1,6 +1,7 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
-from ..utils import get_n_classes, label_to_onehot, onehot_to_label
+from ..utils import label_to_onehot, accuracy_fn
 
 
 class LogisticRegression(object):
@@ -150,7 +151,7 @@ class LogisticRegression(object):
             W = W - self.lr * dW
             b = b - self.lr * db
 
-            if (i+1) % self.print_period == 0:
+            if self.print_period != 0 and (i+1) % self.print_period == 0:
                 loss = self.compute_loss(train_label, pred_labels)
                 print(f"Iteration {i+1}, loss: {loss}")
             
@@ -174,6 +175,56 @@ class LogisticRegression(object):
         """
         return self.get_predict_classes(self.get_predict_labels(test_data, self.weights, self.bias))
 
+def KFold_cross_validation_logistic_regression(X, Y, K, lr=0.1, max_iters=10000):
+    N = X.shape[0]
+    
+    accuracies = []  # list of accuracies
+    for fold_ind in range(K):
+        #Split the data into training and validation folds:
+        print(f"fold {fold_ind+1}")
+        #all the indices of the training dataset
+        all_ind = np.arange(N)
+        split_size = N // K
+        
+        val_ind = all_ind[fold_ind * split_size : (fold_ind + 1) * split_size]
+        train_ind = np.setdiff1d(all_ind, val_ind, assume_unique=True)
+        # find the set different with arr1 and arr2
+        X_train_fold = X[train_ind, :]
+        Y_train_fold = Y[train_ind]
+        X_val_fold = X[val_ind, :]
+        Y_val_fold = Y[val_ind]
+
+        # YOUR CODE HERE
+        model = LogisticRegression(lr=lr, print_period=5000, max_iters=max_iters)
+        model.fit(X_train_fold, Y_train_fold)
+        acc = accuracy_fn(model.predict(X_val_fold), Y_val_fold)
+        accuracies.append(acc)
+    
+    #Find the average validation accuracy over K:
+    ave_acc = np.mean(accuracies)
+    return ave_acc
+
+def run_search_for_hyperparam_logistic(xtrain, ytrain, learning_rates = [0.001, 0.005, 0.01, 0.05, 0.1, 0.15, 0.2, 0.3]):
+    print("Start Five Fold Cross-Validation for Logistic Regression")
+    results = []
+    for lr in learning_rates:
+        print(f"lr={lr}")
+        ave_acc = KFold_cross_validation_logistic_regression(xtrain, ytrain, 5, lr=lr)
+        results.append((lr, ave_acc))
+        print('\n')
+            
+    results = np.array(results)
+    
+    x = results[:, 0]
+    y = results[:, 1]
+
+    plt.plot(x, y, marker='o', linestyle='-')
+    plt.title('Validation Result')
+    plt.xlabel('Learning Rate')
+    plt.ylabel('Accuracy')
+    plt.show()
+    
+    return results
 
 if __name__ == "__main__":
     feature_data = np.load('features.npz',allow_pickle=True)
