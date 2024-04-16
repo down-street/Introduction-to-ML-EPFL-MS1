@@ -39,7 +39,7 @@ class LinearRegression(object):
 
         self.weight = np.linalg.pinv(training_data.T @ training_data + self.lmda * I) @ (training_data.T @ training_labels)
 
-        pred_regression_targets = training_data.T @ self.weight
+        pred_regression_targets = training_data @ self.weight
         return pred_regression_targets
 
 

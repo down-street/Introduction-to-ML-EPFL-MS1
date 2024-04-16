@@ -68,6 +68,9 @@ def main(args):
     elif args.method == "logistic_regression":  ### WRITE YOUR CODE HERE
         method_obj = LogisticRegression(lr=args.lr_logistic, max_iters=args.max_iters_logistic)
 
+    elif args.method == "linear_regression":
+        method_obj = LinearRegression(lmda=args.lmda)
+
     ## 4. Train and evaluate the method
 
     if args.task == "center_locating":
