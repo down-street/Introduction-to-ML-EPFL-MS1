@@ -43,7 +43,7 @@ class LinearRegression(object):
         return pred_regression_targets
 
 
-def predict(self, test_data):
+    def predict(self, test_data):
         """
             Runs prediction on the test data.
             

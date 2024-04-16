@@ -42,6 +42,18 @@ def main(args):
     ## 2. Then we must prepare it. This is were you can create a validation set,
     #  normalize, add bias, etc.
 
+    # normalize the data
+    means = np.mean(xtrain, axis=0)
+    stds = np.std(xtrain, axis=0) + 1e-10  # Add a small constant to prevent division by zero
+
+    # Normalize the training and testing data
+    xtrain = normalize_fn(xtrain, means, stds)
+    xtest = normalize_fn(xtest, means, stds)
+
+    # Append a bias term to the normalized training and testing data
+    xtrain = append_bias_term(xtrain)
+    xtest = append_bias_term(xtest)
+
     # Make a validation set (it can overwrite xtest, ytest)
     if not args.test:
         if args.method == "logistic_regression":
@@ -76,7 +88,6 @@ def main(args):
     if args.task == "center_locating":
         # Fit parameters on training data
         preds_train = method_obj.fit(xtrain, ctrain)
-
         # Perform inference for training and test data
         train_pred = method_obj.predict(xtrain)
         preds = method_obj.predict(xtest)
