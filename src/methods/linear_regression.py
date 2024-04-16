@@ -1,4 +1,6 @@
 import numpy as np
+from ..utils import mse_fn
+import matplotlib.pyplot as plt
 import sys
 
 class LinearRegression(object):
@@ -57,7 +59,54 @@ class LinearRegression(object):
         #### YOUR CODE HERE!
         ###
         ##
-
         pred_regression_targets = test_data @ self.weight
         return pred_regression_targets
 
+    def get_val_loss(self, xval, cval):
+        pred_cval = self.predict(xval)
+        return mse_fn(pred_cval, cval)
+    
+def KFold_cross_validation_linear_regression(X, Y, K, lmda):
+    N = X.shape[0]
+    
+    losses = []  # list of accuracies
+    for fold_ind in range(K):
+        #Split the data into training and validation folds:
+        #all the indices of the training dataset
+        all_ind = np.arange(N)
+        split_size = N // K
+        
+        val_ind = all_ind[fold_ind * split_size : (fold_ind + 1) * split_size]
+        train_ind = np.setdiff1d(all_ind, val_ind, assume_unique=True)
+        # find the set different with arr1 and arr2
+        X_train_fold = X[train_ind, :]
+        Y_train_fold = Y[train_ind]
+        X_val_fold = X[val_ind, :]
+        Y_val_fold = Y[val_ind]
+
+        # YOUR CODE HERE
+        model = LinearRegression(lmda=lmda)
+        model.fit(X_train_fold, Y_train_fold)
+        losses.append(model.get_val_loss(X_val_fold, Y_val_fold))
+    #Find the average validation loss over K:
+    ave_loss = np.mean(losses)
+    return ave_loss
+
+def run_search_for_hyperparam_linear(xtrain, ytrain, lmdas = [0, 0.1, 1, 5, 10, 15, 25]):
+    print("Start Five Fold Cross-Validation for Linear Regression")
+    results = []
+    for lmda in lmdas:
+        ave_loss = KFold_cross_validation_linear_regression(xtrain, ytrain, 5, lmda)
+        results.append((lmda, ave_loss))
+            
+    results = np.array(results)
+    
+    x = results[:, 0]
+    y = results[:, 1]
+    plt.plot(x, y, marker='o', linestyle='-')
+    plt.title('Validation Result')
+    plt.xlabel('Lambda')
+    plt.ylabel('Loss')
+    plt.show()
+    
+    return results

@@ -5,7 +5,7 @@ import numpy as np
 from src.data import load_data
 from src.methods.dummy_methods import DummyClassifier
 from src.methods.logistic_regression import LogisticRegression, run_search_for_hyperparam_logistic
-from src.methods.linear_regression import LinearRegression 
+from src.methods.linear_regression import LinearRegression, run_search_for_hyperparam_linear
 from src.methods.knn import KNN
 from src.utils import normalize_fn, append_bias_term, accuracy_fn, macrof1_fn, mse_fn
 import os
@@ -56,6 +56,8 @@ def main(args):
 
     # Make a validation set (it can overwrite xtest, ytest)
     if not args.test:
+        if args.method == "linear_regression":
+            run_search_for_hyperparam_linear(xtrain, ytrain)
         if args.method == "logistic_regression":
             run_search_for_hyperparam_logistic(xtrain, ytrain)
         
