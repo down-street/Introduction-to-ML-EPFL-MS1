@@ -1,10 +1,11 @@
 import argparse
+from unittest import result
 
 import numpy as np
 
 from src.data import load_data
 from src.methods.dummy_methods import DummyClassifier
-from src.methods.logistic_regression import LogisticRegression, run_search_for_hyperparam_logistic
+from src.methods.logistic_regression import LogisticRegression, run_grid_search_for_hyperparam_logistic, draw_val_result
 from src.methods.linear_regression import LinearRegression, run_search_for_hyperparam_linear
 from src.methods.knn import KNN,run_search_for_hyperparam_knn
 from src.utils import normalize_fn, append_bias_term, accuracy_fn, macrof1_fn, mse_fn
@@ -59,7 +60,8 @@ def main(args):
         if args.method == "linear_regression":
             run_search_for_hyperparam_linear(xtrain, ctrain)
         if args.method == "logistic_regression":
-            run_search_for_hyperparam_logistic(xtrain, ytrain)
+            result_lr, result_iter = run_grid_search_for_hyperparam_logistic(xtrain, ytrain)
+            draw_val_result(result_lr, result_iter)
         if args.method == "knn":
             run_search_for_hyperparam_knn(xtrain, ytrain, ctrain)
         return
@@ -89,7 +91,7 @@ def main(args):
         method_obj = KNN(k=args.K,task_kind=args.task)
 
     elif args.method == "logistic_regression":  ### WRITE YOUR CODE HERE
-        method_obj = LogisticRegression(lr=args.lr_logistic, max_iters=args.max_iters_logistic)
+        method_obj = LogisticRegression(lr=args.lr, max_iters=args.max_iters)
 
     elif args.method == "linear_regression":
         method_obj = LinearRegression(lmda=args.lmda)
@@ -140,10 +142,8 @@ if __name__ == '__main__':
     parser.add_argument('--data_type', default="features", type=str, help="features/original(MS2)")
     parser.add_argument('--lmda', type=float, default=10, help="lambda of linear/ridge regression")
     parser.add_argument('--K', type=int, default=1, help="number of neighboring datapoints used for knn")
-    parser.add_argument('--lr', type=float, default=1e-5, help="learning rate for methods with learning rate")
-    parser.add_argument('--max_iters', type=int, default=100, help="max iters for methods which are iterative")
-    parser.add_argument('--lr_logistic', type=float, default=5e-2, help="learning rate for methods with learning rate")
-    parser.add_argument('--max_iters_logistic', type=int, default=10000, help="max iters for logistic regression")
+    parser.add_argument('--lr', type=float, default=1e-2, help="learning rate for methods with learning rate")
+    parser.add_argument('--max_iters', type=int, default=500, help="max iters for methods which are iterative")
     parser.add_argument('--test', action="store_true", help="train on whole training data and evaluate on the test data, otherwise use a validation set")
     parser.add_argument('--exp', action="store_true",help="find the best hyperparameter of a method and shows the result")
 

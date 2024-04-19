@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from ..utils import label_to_onehot, accuracy_fn
+from ..utils import label_to_onehot, accuracy_fn, macrof1_fn
 
 
 class LogisticRegression(object):
@@ -88,8 +88,8 @@ class LogisticRegression(object):
             grad_b (array): (1, C)
         """
         m = X.shape[0]
-        grad_W = X.T @ (Y_hat - Y) / m
-        grad_b = np.sum(Y_hat - Y, axis=0, keepdims=True) / m
+        grad_W = X.T @ (Y_hat - Y) 
+        grad_b = np.sum(Y_hat - Y, axis=0, keepdims=True) 
         return grad_W, grad_b
     
     def get_predict_labels(self, X, W, b):
@@ -176,10 +176,11 @@ class LogisticRegression(object):
         """
         return self.get_predict_classes(self.get_predict_labels(test_data, self.weights, self.bias))
 
-def KFold_cross_validation_logistic_regression(X, Y, K, lr=0.1, max_iters=10000):
+def KFold_cross_validation_logistic_regression(X, Y, K, lr=0.001, max_iters=500):
     N = X.shape[0]
     
     accuracies = []  # list of accuracies
+    f1s = []
     for fold_ind in range(K):
         #Split the data into training and validation folds:
         print(f"fold {fold_ind+1}")
@@ -196,41 +197,83 @@ def KFold_cross_validation_logistic_regression(X, Y, K, lr=0.1, max_iters=10000)
         Y_val_fold = Y[val_ind]
 
         # YOUR CODE HERE
-        model = LogisticRegression(lr=lr, print_period=5000, max_iters=max_iters)
+        model = LogisticRegression(lr=lr, max_iters=max_iters, print_period=0)
         model.fit(X_train_fold, Y_train_fold)
-        acc = accuracy_fn(model.predict(X_val_fold), Y_val_fold)
+        pred_Y_val_fold = model.predict(X_val_fold)
+        acc = accuracy_fn(pred_Y_val_fold, Y_val_fold)
+        f1 = macrof1_fn(pred_Y_val_fold, Y_val_fold)
         accuracies.append(acc)
-    
+        f1s.append(f1)
+        
     #Find the average validation accuracy over K:
     ave_acc = np.mean(accuracies)
-    return ave_acc
+    f1_acc = np.mean(f1)
+    return ave_acc, f1_acc
 
-def run_search_for_hyperparam_logistic(xtrain, ytrain, learning_rates = [0.001, 0.005, 0.01, 0.05, 0.1, 0.15, 0.2, 0.3]):
-    print("Start Five Fold Cross-Validation for Logistic Regression")
-    results = []
+def run_grid_search_for_hyperparam_logistic(xtrain, ytrain, 
+                                            learning_rates = [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.2], 
+                                            max_iters = [10, 50, 100, 200, 500, 1000]):
+    results_lr = []
+    print("---Run five-fold validation for learning rate---")
     for lr in learning_rates:
         print(f"lr={lr}")
-        ave_acc = KFold_cross_validation_logistic_regression(xtrain, ytrain, 5, lr=lr)
-        results.append((lr, ave_acc))
-        print('\n')
+        ave_acc, f1_acc = KFold_cross_validation_logistic_regression(xtrain, ytrain, 5, lr=lr, max_iters=100)
+        results_lr.append((lr, ave_acc, f1_acc))
             
-    results = np.array(results)
+    results_lr = np.array(results_lr)
     
-    x = results[:, 0]
-    y = results[:, 1]
+    print("---Run five-fold validation for iteration number---")
+    results_iters = []
+    for iters in max_iters:
+        print(f"iters={iters}")
+        ave_acc, f1_acc = KFold_cross_validation_logistic_regression(xtrain, ytrain, 5, lr=0.01, max_iters=iters)
+        results_iters.append((iters, ave_acc, f1_acc))
+        
+    results_iters = np.array(results_iters)
+    
+    return results_lr, results_iters
 
-    plt.plot(x, y, marker='o', linestyle='-')
-    plt.title('Validation Result')
-    plt.xlabel('Learning Rate')
-    plt.ylabel('Accuracy')
+def draw_val_result(results_lr, results_iters, iters_when_val_lr=100, lr_when_val_iters=0.01):
+    lr = results_lr[:, 0]
+    acc = results_lr[:, 1]
+    f1 = results_lr[:, 2]
+
+    fig, (ax1_lr, ax1_iter) = plt.subplots(1, 2, figsize=(12, 4))
+
+    ax1_lr.set_xlabel('Learning Rate')
+    ax1_lr.set_ylabel('Accuracy')
+    line1 = ax1_lr.plot(lr, acc, marker='o', linestyle='-', color = 'tab:orange')
+    ax1_lr.tick_params(axis='y')
+
+    ax2_lr = ax1_lr.twinx()
+    ax2_lr.set_ylabel('F1 Score')
+    line2 = ax2_lr.plot(lr, f1, marker='o', linestyle='-')
+    ax2_lr.tick_params(axis='y')
+
+    lines = line1 + line2
+    labels = ['Accuracy', 'F1 Score']
+    ax1_lr.legend(lines, labels)
+
+    plt.title(f'Validation Result(Max Iters={iters_when_val_lr})')
+
+    iters = results_iters[:, 0]
+    acc = results_iters[:, 1]
+    f1 = results_iters[:, 2]
+
+    ax1_iter.set_xlabel('Max Iteration')
+    ax1_iter.set_ylabel('Accuracy')
+    line1 = ax1_iter.plot(iters, acc, marker='o', linestyle='-', color = 'tab:orange')
+    ax1_iter.tick_params(axis='y')
+
+    ax2_iter = ax1_iter.twinx()
+    ax2_iter.set_ylabel('F1 Score')
+    line2 = ax2_iter.plot(iters, f1, marker='o', linestyle='-')
+    ax2_iter.tick_params(axis='y')
+
+    lines = line1 + line2
+    labels = ['Accuracy', 'F1 Score']
+    ax1_iter.legend(lines, labels, loc="lower right")
+
+    plt.title(f'Validation Result(Learning Rate={lr_when_val_iters})')
+    plt.subplots_adjust(wspace=0.5)
     plt.show()
-    
-    return results
-
-if __name__ == "__main__":
-    feature_data = np.load('features.npz',allow_pickle=True)
-    xtrain, xtest, ytrain, ytest, ctrain, ctest =feature_data['xtrain'],feature_data['xtest'],\
-            feature_data['ytrain'],feature_data['ytest'],feature_data['ctrain'],feature_data['ctest']
-            
-    model = LogisticRegression()
-    print(model.fit(xtrain, ytrain))
