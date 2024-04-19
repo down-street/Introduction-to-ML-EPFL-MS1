@@ -6,8 +6,9 @@ from src.data import load_data
 from src.methods.dummy_methods import DummyClassifier
 from src.methods.logistic_regression import LogisticRegression, run_search_for_hyperparam_logistic
 from src.methods.linear_regression import LinearRegression, run_search_for_hyperparam_linear
-from src.methods.knn import KNN
+from src.methods.knn import KNN,run_search_for_hyperparam_knn
 from src.utils import normalize_fn, append_bias_term, accuracy_fn, macrof1_fn, mse_fn
+from sklearn.model_selection import train_test_split
 import os
 np.random.seed(100)
 
@@ -53,14 +54,21 @@ def main(args):
     # Append a bias term to the normalized training and testing data
     xtrain = append_bias_term(xtrain)
     xtest = append_bias_term(xtest)
+    # find the best hyperparameter
+    if args.exp:
+        if args.method == "linear_regression":
+            run_search_for_hyperparam_linear(xtrain, ctrain)
+        if args.method == "logistic_regression":
+            run_search_for_hyperparam_logistic(xtrain, ytrain)
+        if args.method == "knn":
+            run_search_for_hyperparam_knn(xtrain, ytrain, ctrain)
 
     # Make a validation set (it can overwrite xtest, ytest)
     if not args.test:
-        if args.method == "linear_regression":
-            run_search_for_hyperparam_linear(xtrain, ytrain)
-        if args.method == "logistic_regression":
-            run_search_for_hyperparam_logistic(xtrain, ytrain)
-        
+        if(args.task=="center_locating"):
+            xtrain, xtest, ctrain, ctest = train_test_split(xtrain, ctrain, test_size=0.20, random_state=42)
+        if(args.task=="breed_identifying"): 
+            xtrain, xtest, ytrain, ytest = train_test_split(xtrain, ytrain, test_size=0.20, random_state=42)        
     
     ### WRITE YOUR CODE HERE to do any other data processing
 
@@ -136,6 +144,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr_logistic', type=float, default=5e-2, help="learning rate for methods with learning rate")
     parser.add_argument('--max_iters_logistic', type=int, default=10000, help="max iters for logistic regression")
     parser.add_argument('--test', action="store_true", help="train on whole training data and evaluate on the test data, otherwise use a validation set")
+    parser.add_argument('--exp', action="store_true",help="find the best hyperparameter of a method and shows the result")
 
 
     # Feel free to add more arguments here if you need!

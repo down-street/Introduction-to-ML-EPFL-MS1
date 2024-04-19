@@ -1,5 +1,6 @@
 import numpy as np
-
+import matplotlib.pyplot as plt
+from src.utils import normalize_fn, append_bias_term, accuracy_fn, macrof1_fn, mse_fn
 class KNN(object):
     """
         kNN classifier object.
@@ -78,3 +79,69 @@ class KNN(object):
                 test_labels.append(average_value)
 
         return np.array(test_labels)
+    
+def KFold_cross_validation_knn(X, Y, K, k, task_kind):
+    N = X.shape[0]
+    losses = []  # list of accuracies
+    acc = []
+    for fold_ind in range(K):
+        #Split the data into training and validation folds:
+        #all the indices of the training dataset
+        all_ind = np.arange(N)
+        split_size = N // K
+        
+        val_ind = all_ind[fold_ind * split_size : (fold_ind + 1) * split_size]
+        train_ind = np.setdiff1d(all_ind, val_ind, assume_unique=True)
+        # find the set different with arr1 and arr2
+        X_train_fold = X[train_ind, :]
+        Y_train_fold = Y[train_ind]
+        X_val_fold = X[val_ind, :]
+        Y_val_fold = Y[val_ind]
+
+        # YOUR CODE HERE
+        model = KNN(k,task_kind=task_kind)
+        model.fit(X_train_fold, Y_train_fold)
+        preds = model.predict(X_val_fold)
+        if(task_kind=='center_locating'):
+            losses.append(mse_fn(preds, Y_val_fold))
+        if(task_kind=='breed_identifying'):
+            acc.append(accuracy_fn(preds, Y_val_fold))
+    #Find the average validation loss over K:
+    if(task_kind=='center_locating'):
+        ave_loss = np.mean(losses)
+        return ave_loss
+    if(task_kind=='breed_identifying'):
+        ave_acc = np.mean(acc)
+        return ave_acc
+def run_search_for_hyperparam_knn(xtrain, ytrain,ctrain,K = [x for x in range(1,30)]):
+    print("Start Five Fold Cross-Validation for knn")
+    results_classification = []
+    results_regression = []
+    print('starting regression')
+    for k in K:
+        print('startingk=',k)
+        ave_loss = KFold_cross_validation_knn(xtrain, ctrain, 5, k,'center_locating')
+        results_regression.append((k, ave_loss))
+    print('starting calssification')
+    for k in K:
+        print('startingk=',k)
+        ave_acc = KFold_cross_validation_knn(xtrain, ytrain, 5, k,'breed_identifying')
+        results_classification.append((k, ave_acc))        
+    results_classification = np.array(results_classification)
+    results_regression = np.array(results_regression)
+    x = results_classification[:, 0]
+    y = results_classification[:, 1]
+    plt.plot(x, y, marker='o', linestyle='-')
+    plt.title('KNN Validation Result-breed_identifying')
+    plt.xlabel('K')
+    plt.ylabel('Acc')
+    plt.show()
+    x = results_regression[:, 0]
+    y = results_regression[:, 1]
+    plt.plot(x, y, marker='o', linestyle='-')
+    plt.title('KNN Validation Result-center_locating')
+    plt.xlabel('K')
+    plt.ylabel('Loss')
+    plt.show()
+    
+    return [results_classification,results_regression]

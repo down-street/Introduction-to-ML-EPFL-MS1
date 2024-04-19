@@ -10,7 +10,7 @@ class LinearRegression(object):
         Recall that linear regression is just ridge regression with lambda=0.
     """
 
-    def __init__(self, lmda =0):
+    def __init__(self, lmda =0, task_kind ="regression"):
         """
             Initialize the task_kind (see dummy_methods.py)
             and call set_arguments function of this class.

@@ -8,7 +8,7 @@ class DummyClassifier(object):
     This method is a dummy method! It returns a random label for classification.
     """
     
-    def __init__(self, arg1, arg2=0):
+    def __init__(self, arg1, arg2=0,task_kind ="classification"):
         """
         Initialization function. This get called when you create a new object of the class.
         The arguments can be used to correctly initialize it.
