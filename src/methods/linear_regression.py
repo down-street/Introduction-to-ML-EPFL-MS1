@@ -17,7 +17,8 @@ class LinearRegression(object):
         """
         self.lmda = lmda
         self.weight = None
-        self.task_kind = 'ridge regression' if lmda != 0 else 'linear regression'
+        self.task_kind = task_kind
+        #self.task_kind = 'ridge regression' if lmda != 0 else 'linear regression'
 
 
     def fit(self, training_data, training_labels):

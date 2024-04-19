@@ -10,7 +10,7 @@ class LogisticRegression(object):
     """
 
     def __init__(self, lr=0.1, max_iters=10000, 
-                 print_period=2000, record_period=1000):
+                 print_period=2000, record_period=1000,task_kind ="classification"):
         """
         Initialize the new object (see dummy_methods.py)
         and set its arguments.
@@ -23,6 +23,7 @@ class LogisticRegression(object):
         self.max_iters = max_iters
         self.print_period = print_period
         self.record_period = record_period
+        self.task_kind = task_kind
     
         
         self.weights = None

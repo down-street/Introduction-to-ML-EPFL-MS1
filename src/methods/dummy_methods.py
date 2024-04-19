@@ -23,6 +23,7 @@ class DummyClassifier(object):
         # Below, we store the value of arg1 and arg2 in self
         self.arg1 = arg1
         self.arg2 = arg2
+        self.task_kind = task_kind
         # We can then access them in any function of this class by using `self.arg1`, for example.
     
     def random_predict(self, C, N):

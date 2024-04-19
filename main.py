@@ -62,6 +62,7 @@ def main(args):
             run_search_for_hyperparam_logistic(xtrain, ytrain)
         if args.method == "knn":
             run_search_for_hyperparam_knn(xtrain, ytrain, ctrain)
+        return
 
     # Make a validation set (it can overwrite xtest, ytest)
     if not args.test:
